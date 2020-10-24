@@ -1,0 +1,19 @@
+{
+  "name": "learn_api",
+  "version": "1.0.0",
+  "description": "learning api",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Girish Agarwal",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "config": "^3.3.2",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "mongoose": "^5.10.9",
+    "pug": "^3.0.0"
+  }
+}
