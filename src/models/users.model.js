@@ -1,9 +1,11 @@
+const mongoosePaginate = require('mongoose-aggregate-paginate');
+
 const mongoose = require('mongoose');
 const UsersSchema = mongoose.Schema({
     name: String,
     countryCode: String,
     phone: { type: String, index: true },
-    email: {type: String, required: true, email: true},
+    email: {type: String, required: true, email: true, unique: true},
     address: {
         address_line1: String,
         address_line2: String,
@@ -21,5 +23,7 @@ const UsersSchema = mongoose.Schema({
       updatedAt: 'updated_at',
     },
 });
+
+UsersSchema.plugin(mongoosePaginate);
 
 module.exports = mongoose.model('users', UsersSchema);

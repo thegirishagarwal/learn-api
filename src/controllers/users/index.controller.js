@@ -1,39 +1,83 @@
 const userModel = require('../../models/users.model');
+const userMessage = global.apiMessage('users');
+const userService = require('../../services/users.service');
 exports.GetUsers = (req, res) => {
-    const whereCondition = {
-        _id:0,
-        name: 1,
-        email: 1,
-        address: 1
-    };
-    userModel.find({}, whereCondition).then(result => {
-        res.send(result)
+
+    let PAGE_NUMBER = 1;
+    if (req.params.page && req.params.page > 0) {
+        PAGE_NUMBER = req.params.page;
+    }
+    userService.GetUsers(req.params).then(result => {
+        const resData = {
+            users: {
+                total_pages: result.pages,
+                total_records: result.total,
+                page: PAGE_NUMBER,
+                data: result.docs
+            },
+        }
+        const response = global.responseData(global.constant.HTTP_CODES[0], '', resData);
+        res.status(global.constant.HTTP_CODES[0]).send(response);
+    }).catch(err => {
+        const response = global.responseData(global.constant.HTTP_CODES[4], 'Something went wrong!', '');
+        res.status(global.constant.HTTP_CODES[4]).send(response);
     })
 }
 
 exports.GetUser = (req, res) => {
-    const userID = req.params.userID;
-
-    userModel.find({_id: userID}).then(result => {
-        res.send(result)
+    userService.GetSingleUser(req.params.userID).then(result => {
+        let response = {};
+        if (result === null) {
+            response = global.responseData(global.constant.HTTP_CODES[2], 'User is not exists');
+            res.status(global.constant.HTTP_CODES[2]);
+        } else {
+            response = global.responseData(global.constant.HTTP_CODES[0], '', result);
+            res.status(global.constant.HTTP_CODES[0]);
+        }
+        res.send(response);
     })
 }
 
 exports.PostUser = (req, res) => {
-    const body = req.body;
-    if (!body.email) {
-        res.send('Email is Required');
-    } else {
-        userModel.find({email: body.email}).then(result => {
-            if (result.length > 0) {
-                res.send('Email is already taken');
-            } else {
-                const user = new userModel(body);
-                user.save().then(() => {
-                    res.send('Add success');
-                })
-            }
-        })
-    }
+    userService.CreateUser(req.body).then(result => {
+        if(result.status) {
+            const response = global.responseData(global.constant.HTTP_CODES[1], result.message);
+            res.status(global.constant.HTTP_CODES[1]).send(response);
+        } else {
+            const response = global.responseData(global.constant.HTTP_CODES[0], userMessage.added);
+            res.status(global.constant.HTTP_CODES[0]).send(response);
+        }
+    })
     
+}
+
+exports.PutUser = (req, res) => {
+    userService.UpdateUser(req.params.userID, req.body).then(result => {
+        if(result.status) {
+            const response = global.responseData(global.constant.HTTP_CODES[1], result.message);
+            res.status(global.constant.HTTP_CODES[1]).send(response);
+        } else {
+            const response = global.responseData(global.constant.HTTP_CODES[0], userMessage.updated);
+            res.status(global.constant.HTTP_CODES[0]).send(response);
+        }
+    }).catch(err => {
+        if (err.keyPattern.email) {
+            const response = global.responseData(global.constant.HTTP_CODES[4], userMessage.email.isAlready);
+            res.status(global.constant.HTTP_CODES[4]).send(response);
+        }
+    });
+}
+
+exports.DeleteUser = (req, res) => {
+    userService.DeleteUser(req.params.userID).then(() => {
+        response = global.responseData(global.constant.HTTP_CODES[0], userMessage.deleted);
+        res.status(global.constant.HTTP_CODES[0]).send(response);
+    })
+}
+
+exports.DeleteAll = (req, res) => {
+    userService.DeleteAllUsers().then(() => {
+        const response = global.responseData(global.constant.HTTP_CODES[0], 'All users deleted');
+        res.status(global.constant.HTTP_CODES[0]).send(response);
+    })
 }
