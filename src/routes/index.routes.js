@@ -15,7 +15,15 @@ router.route('/users/deleteAll').delete(userController.DeleteAll);
 router.route('/users/:userID([a-zA-Z0-9]{24})').get(userController.GetUser).put(userController.PutUser).delete(userController.DeleteUser);
 
 
-
+// error handler middleware
+router.use((error, req, res, next) => {
+    res.status(error.status || 500).send({
+      error: {
+        status: error.status || 500,
+        message: error.message || 'Internal Server Error',
+      },
+    });
+  });
 // Routes 404
 router.use(function(req, res) {
     res.status(404);

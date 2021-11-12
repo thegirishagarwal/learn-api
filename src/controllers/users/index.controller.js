@@ -4,10 +4,11 @@ const userService = require('../../services/users.service');
 exports.GetUsers = (req, res) => {
 
     let PAGE_NUMBER = 1;
-    if (req.params.page && req.params.page > 0) {
-        PAGE_NUMBER = req.params.page;
+    if (req.query.page && req.query.page > 0) {
+        PAGE_NUMBER = req.query.page;
     }
-    userService.GetUsers(req.params).then(result => {
+    userService.GetUsers(req.query).then(result => {
+        let response = {};
         const resData = {
             users: {
                 total_pages: result.pages,
@@ -16,9 +17,15 @@ exports.GetUsers = (req, res) => {
                 data: result.docs
             },
         }
-        const response = global.responseData(global.constant.HTTP_CODES[0], '', resData);
-        res.status(global.constant.HTTP_CODES[0]).send(response);
-    }).catch(err => {
+        if (result.status) {
+            response = global.responseData(global.constant.HTTP_CODES[4], result.message);
+            res.status(global.constant.HTTP_CODES[4]).send(response);
+        } else {
+            response = global.responseData(global.constant.HTTP_CODES[0], '', resData);
+            res.status(global.constant.HTTP_CODES[0]).send(response);
+        }
+        
+    }).catch((err) => {
         const response = global.responseData(global.constant.HTTP_CODES[4], 'Something went wrong!', '');
         res.status(global.constant.HTTP_CODES[4]).send(response);
     })

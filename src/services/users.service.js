@@ -1,23 +1,55 @@
 const userModel = require('../models/users.model');
 
-exports.GetUsers = (params) => {
+exports.GetUsers = async (queryParams) => {
+
+
+    if (queryParams.fields && queryParams.skipFields) {
+        const response = {
+            status: 1,
+            message: 'Please use one at a time between fields and skipFields'
+        };
+        return await response;
+    }
+
+    const condData = ['name', 'email', 'address'];
+    const project = {
+        _id: 1,
+        name: 1,
+        email: 1,
+        address: 1
+    }
+    if (queryParams.fields) {
+        condData.forEach(data => {
+            if (queryParams.fields.includes(data)) {
+                project[data] = 1
+            } else {
+                delete project[data]
+            }
+        })
+    }
+    if (queryParams.skipFields) {
+        condData.forEach(data => {
+            if (!queryParams.skipFields.includes(data)) {
+                project[data] = 1
+            } else {
+                delete project[data]
+            }
+        })
+    }
+    
+
     const whereCondition = [
         {
-            $project: {
-                _id: 1,
-                name: 1,
-                email: 1,
-                address: 1
-            }
+            $project: project
         }
     ];
     /**
       * 1. Manage page limit
     */
-   let PAGE_NUMBER = 1;
-   if (params.page && params.page > 0) {
-       PAGE_NUMBER = params.page;
-   }
+    let PAGE_NUMBER = 1;
+    if (queryParams.page && queryParams.page > 0) {
+        PAGE_NUMBER = queryParams.page;
+    }
     const aggregate = userModel.aggregate(whereCondition);
     const options = {
         page: PAGE_NUMBER,
@@ -75,19 +107,6 @@ exports.CreateUser = async (bodyParams) => {
 }
 
 exports.UpdateUser = async (userID, bodyParams) => {
-    let response = {};
-    // const body = {
-    //     name: req.body.name || '',
-    //     email: req.body.email || '',
-    //     address: {
-    //         address_line1: req.body.address.address_line1 || '',
-    //         address_line2: req.body.address.address_line2 || '',
-    //         city: req.body.address.city || '',
-    //         state: req.body.address.state || '',
-    //         country: req.body.address.country || '',
-    //         zip: req.body.address.zip || ''
-    //     } || {},
-    // };
     if (bodyParams.email === '') {
         const data = {
             status: 1,
